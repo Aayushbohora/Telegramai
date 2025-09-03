@@ -5,17 +5,17 @@ import os
 
 app = Flask(__name__)
 
-# Load small dialogue model
-tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-mini")
+# Load DistilGPT2 (smaller, faster)
+tokenizer = AutoTokenizer.from_pretrained("distilgpt2")
 model = AutoModelForCausalLM.from_pretrained(
-    "microsoft/DialoGPT-mini",
+    "distilgpt2",
     torch_dtype=torch.float32,
-    low_cpu_mem_usage=True
+    low_cpu_mem_usage=True  # fits in Render RAM
 )
 
 @app.route("/")
 def home():
-    return "Tiny DialoGPT is running!"
+    return "Tiny DistilGPT2 Chatbot is running!"
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -29,7 +29,7 @@ def chat():
 
     chat_history_ids = model.generate(
         input_ids,
-        max_length=200,
+        max_length=150,  # smaller to save RAM
         pad_token_id=tokenizer.eos_token_id,
         do_sample=True,
         top_p=0.9,
@@ -40,5 +40,5 @@ def chat():
     return jsonify({"response": bot_response})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))  # Render assigns a PORT environment variable
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
